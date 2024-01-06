@@ -1,26 +1,49 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserDto } from './dto/createUser.dto';
+import { UserNotFoundException } from './exceptions/userNotFound.exception';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async getByEmail(email: string) {
+    console.log({ email });
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!user) {
+      throw new UserNotFoundException();
+    }
+
+    return user;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async getById(id: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!user) {
+      throw new UserNotFoundException();
+    }
+
+    return user;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async create(user: CreateUserDto) {
+    return this.prismaService.user.create({
+      data: {
+        ...user,
+        role: Role.STAFF,
+      },
+      // include: {
+      //   address: true,
+      // },
+    });
   }
 }
