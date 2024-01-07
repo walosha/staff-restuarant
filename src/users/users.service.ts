@@ -40,9 +40,6 @@ export class UsersService {
         ...user,
         role: Role.STAFF,
       },
-      // include: {
-      //   address: true,
-      // },
     });
   }
 }

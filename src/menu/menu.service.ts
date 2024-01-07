@@ -3,6 +3,7 @@ import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { PrismaService } from 'nestjs-prisma';
 import { Prisma, User } from '@prisma/client';
+import { PrismaError } from 'src/utils/prismaError';
 
 @Injectable()
 export class MenuService {
@@ -15,14 +16,16 @@ export class MenuService {
       });
       return menu;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new HttpException(
-            'Menu already created for the day',
-            HttpStatus.CONFLICT,
-          );
-        }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === PrismaError.UniqueConstraintFailed
+      ) {
+        throw new HttpException(
+          'Menu already created for the day',
+          HttpStatus.CONFLICT,
+        );
       }
+
       throw new HttpException(error, 500);
     }
   }
@@ -50,14 +53,13 @@ export class MenuService {
 
       return menu;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
-          throw new HttpException(
-            'Menu with ID not found',
-            HttpStatus.CONFLICT,
-          );
-        }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === PrismaError.RecordDoesNotExist
+      ) {
+        throw new HttpException('Menu with ID not found', HttpStatus.CONFLICT);
       }
+
       throw new HttpException(error.message || 'Internal Server Error', 500);
     }
   }
