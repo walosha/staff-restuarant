@@ -52,7 +52,7 @@ export class AuthenticationService {
 
   public getCookieWithJwtToken(userId: string) {
     const payload: TokenPayload = { userId };
-    const token = this.jwtService.sign(payload);
+    const token = this.getToken(payload);
     return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get(
       'JWT_EXPIRATION_TIME',
     )}`;
@@ -66,6 +66,7 @@ export class AuthenticationService {
     try {
       const user = await this.usersService.getByEmail(email);
       await this.verifyPassword(plainTextPassword, user.password);
+
       return user;
     } catch (error) {
       if (error instanceof UserNotFoundException) {
@@ -73,6 +74,11 @@ export class AuthenticationService {
       }
       throw error;
     }
+  }
+
+  getToken(payload) {
+    const token = this.jwtService.sign(payload);
+    return token;
   }
 
   private async verifyPassword(

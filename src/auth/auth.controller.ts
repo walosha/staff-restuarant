@@ -19,7 +19,7 @@ import JwtAuthenticationGuard from './jwt-authentication.guard';
 import { UserResponseDto } from '../users/dto/userResponseDto';
 import { plainToClass } from 'class-transformer';
 import { TransformDataInterceptor } from 'src/utils/transformData.interceptor';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import LogInDto from './dto/logIn.dto';
 
 @Controller('auth')
@@ -45,7 +45,9 @@ export class AuthenticationController {
     const { user } = request;
     const cookie = this.authenticationService.getCookieWithJwtToken(user.id);
     response.setHeader('Set-Cookie', cookie);
-    return plainToClass(UserResponseDto, user);
+    const token = this.authenticationService.getToken({ userId: user.id });
+    const serialisedUser = plainToClass(UserResponseDto, user);
+    return { ...serialisedUser, token };
   }
 
   @UseGuards(JwtAuthenticationGuard)
@@ -58,6 +60,7 @@ export class AuthenticationController {
     return response.sendStatus(200);
   }
 
+  @ApiBearerAuth('bearer')
   @UseGuards(JwtAuthenticationGuard)
   @UseInterceptors(new TransformDataInterceptor(UserResponseDto))
   @Get()
