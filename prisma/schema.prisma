@@ -22,7 +22,7 @@ model User {
     firstname  String?
     lastname   String?
     role       Role
-    Menu       Menu[]
+    menu       Menu[]
     attendance Attendance[]
 }
 
@@ -32,15 +32,27 @@ model Menu {
     lunch      String
     dinner     String
     date       DateTime     @unique
-    Cook       User         @relation(fields: [cookId], references: [id])
+    cook       User         @relation(fields: [cookId], references: [id])
     cookId     String
     attendance Attendance[]
 }
 
 model Attendance {
     id     String  @id @default(cuid())
+    menu   Menu?   @relation(fields: [menuId], references: [id])
     menuId String?
-    Menu   Menu?   @relation(fields: [menuId], references: [id])
-    User   User?   @relation(fields: [userId], references: [id])
+    user   User?   @relation(fields: [userId], references: [id])
     userId String?
+    staffMealChoice   StaffMealChoice   @relation(fields: [staffMealChoiceId], references: [id])
+    staffMealChoiceId String    @unique
+    @@unique([menuId, userId], name: "attendanceIdentifier")
+
+}
+
+model StaffMealChoice {
+    id                String       @id @default(cuid())
+    breakfast         Boolean
+    lunch             Boolean
+    dinner            Boolean
+    attendance        Attendance?
 }
